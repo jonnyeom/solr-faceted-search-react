@@ -2,7 +2,8 @@ const initialState = {
 	facets: {},
 	docs: [],
 	numFound: 0,
-	pending: false
+	pending: false,
+	highlighting: []
 };
 
 
@@ -26,6 +27,7 @@ export default function(state=initialState, action) {
 				grouped: action.data.grouped || {},
 				numFound: action.data.response ? action.data.response.numFound : tryGroupedResultCount(action.data),
 				facets: action.data.facet_counts.facet_fields,
+        highlighting: action.data.highlighting ? action.data.highlighting : [],
 				pending: false
 			};
 
