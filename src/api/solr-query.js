@@ -112,7 +112,16 @@ const buildHighlight = (highlight) => {
     let hlParams = "&hl=on";
 
     for (const key of Object.keys(highlight)) {
-			hlParams += `&hl.${key}=${highlight[key]}`;
+			// Support nested objects like hl.simple.tags
+      if (typeof highlight[key] === "object") {
+        for (const nestedKey of Object.keys(highlight[key])) {
+          hlParams += `&hl.${key}.${nestedKey}=${highlight[key][nestedKey]}`;
+        }
+      }
+      // Support flat key/values like hl.fl=my_field_name
+      else {
+        hlParams += `&hl.${key}=${highlight[key]}`;
+      }
     }
 
     hlQs = hlParams;
