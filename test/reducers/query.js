@@ -15,7 +15,8 @@ describe("queryReducer", () => { //eslint-disable-line no-undef
 			rows: 10,
 			pageStrategy: "paginate",
 			start: 0,
-			group: { field: "grouped_field" }
+			group: { field: "grouped_field" },
+			hl: "hl=on"
 		})).toEqual({
 			init: "bar",
 			searchFields: ["x"],
@@ -24,7 +25,8 @@ describe("queryReducer", () => { //eslint-disable-line no-undef
 			rows: 10,
 			pageStrategy: "paginate",
 			start: 0,
-			group: { field: "grouped_field" }
+			group: { field: "grouped_field" },
+			hl: "hl=on"
 		});
 	});
 
