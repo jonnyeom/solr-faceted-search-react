@@ -51,7 +51,9 @@ const fieldToQueryFilter = (field) => {
 	return null;
 };
 
-const buildQuery = (fields) => fields
+const buildQuery = (fields, mainQueryField) => fields
+	// Do not include main query field in filter field query param.
+  .filter((searchField) => (!Object.hasOwnProperty.call(searchField, "field") || (Object.hasOwnProperty.call(searchField, "field") && searchField.field !== mainQueryField)))
 	.map(fieldToQueryFilter)
 	.filter((queryFilter) => queryFilter !== null)
 	.map((queryFilter) => `fq=${queryFilter}`)
