@@ -107,7 +107,7 @@ const buildMainQuery = (fields, mainQueryField) => {
 
 const buildHighlight = (highlight) => {
 	let hlQs = "";
-  // If highlight is not set, then exit.
+  // If highlight is set, then populate params from keys/values.
   if (highlight !== null && typeof highlight === "object") {
     let hlParams = "&hl=on";
 

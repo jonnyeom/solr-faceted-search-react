@@ -2054,7 +2054,7 @@ var buildMainQuery = function buildMainQuery(fields, mainQueryField) {
 
 var buildHighlight = function buildHighlight(highlight) {
 	var hlQs = "";
-	// If highlight is not set, then exit.
+	// If highlight is set, then populate params from keys/values.
 	if (highlight !== null && (typeof highlight === "undefined" ? "undefined" : _typeof(highlight)) === "object") {
 		var hlParams = "&hl=on";
 
@@ -2066,9 +2066,37 @@ var buildHighlight = function buildHighlight(highlight) {
 			for (var _iterator = Object.keys(highlight)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
 				var key = _step.value;
 
+				// Support nested objects like hl.simple.tags
 				if (_typeof(highlight[key]) === "object") {
-					hlParams += "&hl." + key + "=" + highlight[key];
+					var _iteratorNormalCompletion2 = true;
+					var _didIteratorError2 = false;
+					var _iteratorError2 = undefined;
+
+					try {
+						for (var _iterator2 = Object.keys(highlight[key])[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+							var nestedKey = _step2.value;
+
+							hlParams += "&hl." + key + "." + nestedKey + "=" + highlight[key][nestedKey];
+						}
+					} catch (err) {
+						_didIteratorError2 = true;
+						_iteratorError2 = err;
+					} finally {
+						try {
+							if (!_iteratorNormalCompletion2 && _iterator2.return) {
+								_iterator2.return();
+							}
+						} finally {
+							if (_didIteratorError2) {
+								throw _iteratorError2;
+							}
+						}
+					}
 				}
+				// Support flat key/values like hl.fl=my_field_name
+				else {
+						hlParams += "&hl." + key + "=" + highlight[key];
+					}
 			}
 		} catch (err) {
 			_didIteratorError = true;
@@ -2125,7 +2153,7 @@ var solrQuery = function solrQuery(query) {
 	var groupParam = group && group.field ? "group=on&group.field=" + encodeURIComponent(group.field) : "";
 	var highlightParam = buildHighlight(hl);
 
-	return "" + mainQuery + ("&" + (queryParams.length > 0 ? queryParams : "")) + ("" + (sortParam.length > 0 ? "&sort=" + sortParam : "")) + ("" + (facetFieldParam.length > 0 ? "&" + facetFieldParam : "")) + ("" + (facetSortParams.length > 0 ? "&" + facetSortParams : "")) + ("" + (groupParam.length > 0 ? "&" + groupParam : "")) + ("&rows=" + rows) + ("&" + facetLimitParam) + ("&" + facetSortParam) + ("&" + cursorMarkParam) + (start === null ? "" : "&start=" + start) + "&facet=on" + ("&" + buildFormat(format)) + ("" + highlightParam);
+	return mainQuery + ("&" + (queryParams.length > 0 ? queryParams : "")) + ("" + (sortParam.length > 0 ? "&sort=" + sortParam : "")) + ("" + (facetFieldParam.length > 0 ? "&" + facetFieldParam : "")) + ("" + (facetSortParams.length > 0 ? "&" + facetSortParams : "")) + ("" + (groupParam.length > 0 ? "&" + groupParam : "")) + ("&rows=" + rows) + ("&" + facetLimitParam) + ("&" + facetSortParam) + ("&" + cursorMarkParam) + (start === null ? "" : "&start=" + start) + "&facet=on" + ("&" + buildFormat(format)) + ("" + highlightParam);
 };
 
 exports.default = solrQuery;
