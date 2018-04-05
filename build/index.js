@@ -1,4 +1,4 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.SolrFacetedSearch = f()}})(function(){var define,module,exports;return (function(){function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s}return e})()({1:[function(_dereq_,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.SolrFacetedSearch = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(_dereq_,module,exports){
 /*!
   Copyright (c) 2016 Jed Watson.
   Licensed under the MIT License (MIT), see
@@ -141,7 +141,7 @@ function invariant(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 }).call(this,_dereq_('_process'))
-},{"_process":10}],4:[function(_dereq_,module,exports){
+},{"_process":16}],4:[function(_dereq_,module,exports){
 (function (process){
 /**
  * Copyright (c) 2014-present, Facebook, Inc.
@@ -206,7 +206,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 module.exports = warning;
 }).call(this,_dereq_('_process'))
-},{"./emptyFunction":2,"_process":10}],5:[function(_dereq_,module,exports){
+},{"./emptyFunction":2,"_process":16}],5:[function(_dereq_,module,exports){
 var isFunction = _dereq_('is-function')
 
 module.exports = forEach
@@ -412,193 +412,7 @@ module.exports = function (headers) {
 
   return result
 }
-},{"for-each":5,"trim":16}],10:[function(_dereq_,module,exports){
-// shim for using process in browser
-var process = module.exports = {};
-
-// cached from whatever global is present so that test runners that stub it
-// don't break things.  But we need to wrap it in a try catch in case it is
-// wrapped in strict mode code which doesn't define any globals.  It's inside a
-// function because try/catches deoptimize in certain engines.
-
-var cachedSetTimeout;
-var cachedClearTimeout;
-
-function defaultSetTimout() {
-    throw new Error('setTimeout has not been defined');
-}
-function defaultClearTimeout () {
-    throw new Error('clearTimeout has not been defined');
-}
-(function () {
-    try {
-        if (typeof setTimeout === 'function') {
-            cachedSetTimeout = setTimeout;
-        } else {
-            cachedSetTimeout = defaultSetTimout;
-        }
-    } catch (e) {
-        cachedSetTimeout = defaultSetTimout;
-    }
-    try {
-        if (typeof clearTimeout === 'function') {
-            cachedClearTimeout = clearTimeout;
-        } else {
-            cachedClearTimeout = defaultClearTimeout;
-        }
-    } catch (e) {
-        cachedClearTimeout = defaultClearTimeout;
-    }
-} ())
-function runTimeout(fun) {
-    if (cachedSetTimeout === setTimeout) {
-        //normal enviroments in sane situations
-        return setTimeout(fun, 0);
-    }
-    // if setTimeout wasn't available but was latter defined
-    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-        cachedSetTimeout = setTimeout;
-        return setTimeout(fun, 0);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedSetTimeout(fun, 0);
-    } catch(e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-            return cachedSetTimeout.call(null, fun, 0);
-        } catch(e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-            return cachedSetTimeout.call(this, fun, 0);
-        }
-    }
-
-
-}
-function runClearTimeout(marker) {
-    if (cachedClearTimeout === clearTimeout) {
-        //normal enviroments in sane situations
-        return clearTimeout(marker);
-    }
-    // if clearTimeout wasn't available but was latter defined
-    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-        cachedClearTimeout = clearTimeout;
-        return clearTimeout(marker);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedClearTimeout(marker);
-    } catch (e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-            return cachedClearTimeout.call(null, marker);
-        } catch (e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-            return cachedClearTimeout.call(this, marker);
-        }
-    }
-
-
-
-}
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick() {
-    if (!draining || !currentQueue) {
-        return;
-    }
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
-}
-
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = runTimeout(cleanUpNextTick);
-    draining = true;
-
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
-        }
-        queueIndex = -1;
-        len = queue.length;
-    }
-    currentQueue = null;
-    draining = false;
-    runClearTimeout(timeout);
-}
-
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
-        }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        runTimeout(drainQueue);
-    }
-};
-
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
-}
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-process.prependListener = noop;
-process.prependOnceListener = noop;
-
-process.listeners = function (name) { return [] }
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
-
-},{}],11:[function(_dereq_,module,exports){
+},{"for-each":5,"trim":15}],10:[function(_dereq_,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -661,7 +475,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
 module.exports = checkPropTypes;
 
 }).call(this,_dereq_('_process'))
-},{"./lib/ReactPropTypesSecret":15,"_process":10,"fbjs/lib/invariant":3,"fbjs/lib/warning":4}],12:[function(_dereq_,module,exports){
+},{"./lib/ReactPropTypesSecret":14,"_process":16,"fbjs/lib/invariant":3,"fbjs/lib/warning":4}],11:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -721,7 +535,7 @@ module.exports = function() {
   return ReactPropTypes;
 };
 
-},{"./lib/ReactPropTypesSecret":15,"fbjs/lib/emptyFunction":2,"fbjs/lib/invariant":3}],13:[function(_dereq_,module,exports){
+},{"./lib/ReactPropTypesSecret":14,"fbjs/lib/emptyFunction":2,"fbjs/lib/invariant":3}],12:[function(_dereq_,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -1267,7 +1081,7 @@ module.exports = function(isValidElement, throwOnDirectAccess) {
 };
 
 }).call(this,_dereq_('_process'))
-},{"./checkPropTypes":11,"./lib/ReactPropTypesSecret":15,"_process":10,"fbjs/lib/emptyFunction":2,"fbjs/lib/invariant":3,"fbjs/lib/warning":4,"object-assign":8}],14:[function(_dereq_,module,exports){
+},{"./checkPropTypes":10,"./lib/ReactPropTypesSecret":14,"_process":16,"fbjs/lib/emptyFunction":2,"fbjs/lib/invariant":3,"fbjs/lib/warning":4,"object-assign":8}],13:[function(_dereq_,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -1299,7 +1113,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 }).call(this,_dereq_('_process'))
-},{"./factoryWithThrowingShims":12,"./factoryWithTypeCheckers":13,"_process":10}],15:[function(_dereq_,module,exports){
+},{"./factoryWithThrowingShims":11,"./factoryWithTypeCheckers":12,"_process":16}],14:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -1313,7 +1127,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 module.exports = ReactPropTypesSecret;
 
-},{}],16:[function(_dereq_,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 
 exports = module.exports = trim;
 
@@ -1328,6 +1142,192 @@ exports.left = function(str){
 exports.right = function(str){
   return str.replace(/\s*$/, '');
 };
+
+},{}],16:[function(_dereq_,module,exports){
+// shim for using process in browser
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
 
 },{}],17:[function(_dereq_,module,exports){
 "use strict";
@@ -1715,6 +1715,7 @@ var SolrClient = function () {
 			results: {
 				facets: [],
 				docs: [],
+				highlighting: [],
 				numFound: 0
 			}
 		};
@@ -1930,6 +1931,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var rangeFacetToQueryFilter = function rangeFacetToQueryFilter(field) {
 	var filters = field.value || [];
 	if (filters.length < 2) {
@@ -1981,8 +1984,12 @@ var fieldToQueryFilter = function fieldToQueryFilter(field) {
 	return null;
 };
 
-var buildQuery = function buildQuery(fields) {
-	return fields.map(fieldToQueryFilter).filter(function (queryFilter) {
+var buildQuery = function buildQuery(fields, mainQueryField) {
+	return fields
+	// Do not include main query field in filter field query param.
+	.filter(function (searchField) {
+		return !Object.hasOwnProperty.call(searchField, "field") || Object.hasOwnProperty.call(searchField, "field") && searchField.field !== mainQueryField;
+	}).map(fieldToQueryFilter).filter(function (queryFilter) {
 		return queryFilter !== null;
 	}).map(function (queryFilter) {
 		return "fq=" + queryFilter;
@@ -2023,6 +2030,66 @@ var buildFormat = function buildFormat(format) {
 	}).join("&");
 };
 
+var buildMainQuery = function buildMainQuery(fields, mainQueryField) {
+	var qs = "q=";
+	var params = fields.filter(function (searchField) {
+		return searchField.field === mainQueryField;
+	}).map(function (searchField) {
+		return fieldToQueryFilter(searchField);
+	});
+	// If there are multiple main query fields, join them.
+	if (params.length > 1) {
+		qs += params.join("&");
+	}
+	// If there is only one main query field, add only it.
+	else if (params.length === 1) {
+			qs += params[0];
+		}
+		// If there are no main query fields, send the wildcard query.
+		else {
+				qs += "*:*";
+			}
+	return qs;
+};
+
+var buildHighlight = function buildHighlight(highlight) {
+	var hlQs = "";
+	// If highlight is not set, then exit.
+	if (highlight !== null && (typeof highlight === "undefined" ? "undefined" : _typeof(highlight)) === "object") {
+		var hlParams = "&hl=on";
+
+		var _iteratorNormalCompletion = true;
+		var _didIteratorError = false;
+		var _iteratorError = undefined;
+
+		try {
+			for (var _iterator = Object.keys(highlight)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+				var key = _step.value;
+
+				if (_typeof(highlight[key]) === "object") {
+					hlParams += "&hl." + key + "=" + highlight[key];
+				}
+			}
+		} catch (err) {
+			_didIteratorError = true;
+			_iteratorError = err;
+		} finally {
+			try {
+				if (!_iteratorNormalCompletion && _iterator.return) {
+					_iterator.return();
+				}
+			} finally {
+				if (_didIteratorError) {
+					throw _iteratorError;
+				}
+			}
+		}
+
+		hlQs = hlParams;
+	}
+	return hlQs;
+};
+
 var solrQuery = function solrQuery(query) {
 	var format = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : { wt: "json" };
 	var searchFields = query.searchFields,
@@ -2034,13 +2101,17 @@ var solrQuery = function solrQuery(query) {
 	    pageStrategy = query.pageStrategy,
 	    cursorMark = query.cursorMark,
 	    idField = query.idField,
-	    group = query.group;
+	    group = query.group,
+	    hl = query.hl;
 
+
+	var mainQueryField = Object.hasOwnProperty.call(query, "mainQueryField") ? query.mainQueryField : "";
 
 	var filters = (query.filters || []).map(function (filter) {
 		return _extends({}, filter, { type: filter.type || "text" });
 	});
-	var queryParams = buildQuery(searchFields.concat(filters));
+	var mainQuery = buildMainQuery(searchFields.concat(filters), mainQueryField);
+	var queryParams = buildQuery(searchFields.concat(filters), mainQueryField);
 
 	var facetFieldParam = facetFields(searchFields);
 	var facetSortParams = facetSorts(searchFields);
@@ -2052,8 +2123,9 @@ var solrQuery = function solrQuery(query) {
 
 	var sortParam = buildSort(sortFields.concat(idSort));
 	var groupParam = group && group.field ? "group=on&group.field=" + encodeURIComponent(group.field) : "";
+	var highlightParam = buildHighlight(hl);
 
-	return "q=*:*&" + (queryParams.length > 0 ? queryParams : "") + ("" + (sortParam.length > 0 ? "&sort=" + sortParam : "")) + ("" + (facetFieldParam.length > 0 ? "&" + facetFieldParam : "")) + ("" + (facetSortParams.length > 0 ? "&" + facetSortParams : "")) + ("" + (groupParam.length > 0 ? "&" + groupParam : "")) + ("&rows=" + rows) + ("&" + facetLimitParam) + ("&" + facetSortParam) + ("&" + cursorMarkParam) + (start === null ? "" : "&start=" + start) + "&facet=on" + ("&" + buildFormat(format));
+	return "" + mainQuery + ("&" + (queryParams.length > 0 ? queryParams : "")) + ("" + (sortParam.length > 0 ? "&sort=" + sortParam : "")) + ("" + (facetFieldParam.length > 0 ? "&" + facetFieldParam : "")) + ("" + (facetSortParams.length > 0 ? "&" + facetSortParams : "")) + ("" + (groupParam.length > 0 ? "&" + groupParam : "")) + ("&rows=" + rows) + ("&" + facetLimitParam) + ("&" + facetSortParam) + ("&" + cursorMarkParam) + (start === null ? "" : "&start=" + start) + "&facet=on" + ("&" + buildFormat(format)) + ("" + highlightParam);
 };
 
 exports.default = solrQuery;
@@ -2365,7 +2437,7 @@ CurrentQuery.propTypes = {
 
 exports.default = CurrentQuery;
 
-},{"classnames":1,"prop-types":14,"react":"react"}],24:[function(_dereq_,module,exports){
+},{"classnames":1,"prop-types":13,"react":"react"}],24:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2429,7 +2501,7 @@ CheckedIcon.propTypes = {
 
 exports.default = CheckedIcon;
 
-},{"prop-types":14,"react":"react"}],25:[function(_dereq_,module,exports){
+},{"prop-types":13,"react":"react"}],25:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2537,7 +2609,7 @@ UncheckedIcon.propTypes = {
 
 exports.default = UncheckedIcon;
 
-},{"prop-types":14,"react":"react"}],27:[function(_dereq_,module,exports){
+},{"prop-types":13,"react":"react"}],27:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2761,7 +2833,7 @@ ListFacet.propTypes = {
 
 exports.default = ListFacet;
 
-},{"../icons/checked":24,"../icons/unchecked":26,"classnames":1,"prop-types":14,"react":"react"}],28:[function(_dereq_,module,exports){
+},{"../icons/checked":24,"../icons/unchecked":26,"classnames":1,"prop-types":13,"react":"react"}],28:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2954,7 +3026,7 @@ RangeFacet.propTypes = {
 
 exports.default = RangeFacet;
 
-},{"./range-slider":29,"classnames":1,"prop-types":14,"react":"react"}],29:[function(_dereq_,module,exports){
+},{"./range-slider":29,"classnames":1,"prop-types":13,"react":"react"}],29:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3182,7 +3254,7 @@ RangeSlider.propTypes = {
 
 exports.default = RangeSlider;
 
-},{"prop-types":14,"react":"react","react-dom":"react-dom"}],30:[function(_dereq_,module,exports){
+},{"prop-types":13,"react":"react","react-dom":"react-dom"}],30:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3247,7 +3319,7 @@ ResultContainer.propTypes = {
 
 exports.default = ResultContainer;
 
-},{"classnames":1,"prop-types":14,"react":"react"}],31:[function(_dereq_,module,exports){
+},{"classnames":1,"prop-types":13,"react":"react"}],31:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3311,7 +3383,7 @@ Result.propTypes = {
 
 exports.default = Result;
 
-},{"prop-types":14,"react":"react"}],32:[function(_dereq_,module,exports){
+},{"prop-types":13,"react":"react"}],32:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3400,7 +3472,7 @@ ResultHeader.propTypes = {
 
 exports.default = ResultHeader;
 
-},{"classnames":1,"prop-types":14,"react":"react"}],34:[function(_dereq_,module,exports){
+},{"classnames":1,"prop-types":13,"react":"react"}],34:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3461,7 +3533,7 @@ ResultList.propTypes = {
 
 exports.default = ResultList;
 
-},{"classnames":1,"prop-types":14,"react":"react"}],35:[function(_dereq_,module,exports){
+},{"classnames":1,"prop-types":13,"react":"react"}],35:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3615,7 +3687,7 @@ Pagination.propTypes = {
 
 exports.default = Pagination;
 
-},{"classnames":1,"prop-types":14,"react":"react"}],36:[function(_dereq_,module,exports){
+},{"classnames":1,"prop-types":13,"react":"react"}],36:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3669,7 +3741,7 @@ Pending.propTypes = {
 
 exports.default = Pending;
 
-},{"prop-types":14,"react":"react"}],37:[function(_dereq_,module,exports){
+},{"prop-types":13,"react":"react"}],37:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3772,7 +3844,7 @@ PreloadIndicator.propTypes = {
 
 exports.default = PreloadIndicator;
 
-},{"classnames":1,"prop-types":14,"react":"react","react-dom":"react-dom"}],38:[function(_dereq_,module,exports){
+},{"classnames":1,"prop-types":13,"react":"react","react-dom":"react-dom"}],38:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3869,7 +3941,7 @@ Result.propTypes = {
 
 exports.default = Result;
 
-},{"classnames":1,"prop-types":14,"react":"react"}],39:[function(_dereq_,module,exports){
+},{"classnames":1,"prop-types":13,"react":"react"}],39:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3956,7 +4028,7 @@ SearchFieldContainer.propTypes = {
 
 exports.default = SearchFieldContainer;
 
-},{"classnames":1,"prop-types":14,"react":"react"}],40:[function(_dereq_,module,exports){
+},{"classnames":1,"prop-types":13,"react":"react"}],40:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4134,7 +4206,7 @@ SolrFacetedSearch.propTypes = {
 
 exports.default = SolrFacetedSearch;
 
-},{"./component-pack":22,"classnames":1,"prop-types":14,"react":"react"}],41:[function(_dereq_,module,exports){
+},{"./component-pack":22,"classnames":1,"prop-types":13,"react":"react"}],41:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4317,7 +4389,7 @@ SortMenu.propTypes = {
 
 exports.default = SortMenu;
 
-},{"classnames":1,"prop-types":14,"react":"react","react-dom":"react-dom"}],42:[function(_dereq_,module,exports){
+},{"classnames":1,"prop-types":13,"react":"react","react-dom":"react-dom"}],42:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4461,7 +4533,7 @@ TextSearch.propTypes = {
 
 exports.default = TextSearch;
 
-},{"../icons/search":25,"classnames":1,"prop-types":14,"react":"react"}],43:[function(_dereq_,module,exports){
+},{"../icons/search":25,"classnames":1,"prop-types":13,"react":"react"}],43:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4526,7 +4598,9 @@ var initialState = {
 	url: null,
 	pageStrategy: null,
 	start: null,
-	group: null
+	group: null,
+	hl: null,
+	mainQueryField: null
 };
 
 var setQueryFields = function setQueryFields(state, action) {
@@ -4537,7 +4611,9 @@ var setQueryFields = function setQueryFields(state, action) {
 		rows: action.rows,
 		pageStrategy: action.pageStrategy,
 		start: action.start,
-		group: action.group
+		group: action.group,
+		hl: action.hl,
+		mainQueryField: action.mainQueryField
 	});
 };
 
@@ -4561,6 +4637,7 @@ exports.default = function () {
 				grouped: action.data.grouped || {},
 				numFound: action.data.response ? action.data.response.numFound : tryGroupedResultCount(action.data),
 				facets: action.data.facet_counts.facet_fields,
+				highlighting: action.data.highlighting ? action.data.highlighting : [],
 				pending: false
 			});
 
@@ -4582,7 +4659,8 @@ var initialState = {
 	facets: {},
 	docs: [],
 	numFound: 0,
-	pending: false
+	pending: false,
+	highlighting: []
 };
 
 var tryGroupedResultCount = function tryGroupedResultCount(data) {
