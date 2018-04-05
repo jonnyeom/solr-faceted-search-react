@@ -33,7 +33,9 @@ declare module "solr-faceted-search-react" {
         start?: number,
         facetLimit?: number,
         facetSort?: "count" | "index",
-        group?: Object
+        group?: Object,
+        hl?:Object,
+        mainQueryField?: String
     }
 
     interface FacetState {
@@ -75,7 +77,9 @@ declare module "solr-faceted-search-react" {
         idField?: string,
         facetLimit?: number,
         facetSort?: "index" | "count",
-        filters?: Array<SearchFilter>
+        filters?: Array<SearchFilter>,
+        hl?: Object,
+        mainQueryField?: String
     }
 
 
