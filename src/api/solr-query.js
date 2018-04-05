@@ -83,6 +83,28 @@ const buildFormat = (format) => Object.keys(format)
 	.map((key) => `${key}=${encodeURIComponent(format[key])}`)
 	.join("&");
 
+const buildMainQuery = (fields, mainQueryField) => {
+  let qs = "q=";
+  let params = fields.filter(function (searchField) {
+    return searchField.field === mainQueryField;
+  }).map(function (searchField) {
+    return fieldToQueryFilter(searchField);
+  });
+  // If there are multiple main query fields, join them.
+  if (params.length > 1) {
+    qs += params.join("&");
+  }
+  // If there is only one main query field, add only it.
+  else if (params.length === 1)  {
+    qs += params[0];
+  }
+  // If there are no main query fields, send the wildcard query.
+  else {
+    qs += "*:*";
+  }
+  return qs;
+};
+
 const solrQuery = (query, format = {wt: "json"}) => {
 	const {
 			searchFields,
@@ -97,8 +119,11 @@ const solrQuery = (query, format = {wt: "json"}) => {
 			group
 		} = query;
 
+	const mainQueryField = Object.hasOwnProperty.call(query, "mainQueryField") ? query.mainQueryField : "";
+
 	const filters = (query.filters || []).map((filter) => ({...filter, type: filter.type || "text"}));
-	const queryParams = buildQuery(searchFields.concat(filters));
+	const mainQuery = buildMainQuery(searchFields.concat(filters), mainQueryField);
+  const queryParams = buildQuery(searchFields.concat(filters), mainQueryField);
 
 	const facetFieldParam = facetFields(searchFields);
 	const facetSortParams = facetSorts(searchFields);
@@ -111,8 +136,8 @@ const solrQuery = (query, format = {wt: "json"}) => {
 	const sortParam = buildSort(sortFields.concat(idSort));
 	const groupParam = group && group.field ? `group=on&group.field=${encodeURIComponent(group.field)}` : "";
 
-
-	return `q=*:*&${queryParams.length > 0 ? queryParams : ""}` +
+	return `${mainQuery}` +
+		`&${queryParams.length > 0 ? queryParams : ""}` +
 		`${sortParam.length > 0 ? `&sort=${sortParam}` : ""}` +
 		`${facetFieldParam.length > 0 ? `&${facetFieldParam}` : ""}` +
 		`${facetSortParams.length > 0 ? `&${facetSortParams}` : ""}` +
