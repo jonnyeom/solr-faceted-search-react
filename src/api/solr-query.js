@@ -112,9 +112,7 @@ const buildHighlight = (highlight) => {
     let hlParams = "&hl=on";
 
     for (const key of Object.keys(highlight)) {
-      if (typeof highlight[key] === "object") {
-        hlParams += `&hl.${key}=${highlight[key]}`;
-      }
+			hlParams += `&hl.${key}=${highlight[key]}`;
     }
 
     hlQs = hlParams;
@@ -155,7 +153,7 @@ const solrQuery = (query, format = {wt: "json"}) => {
 	const groupParam = group && group.field ? `group=on&group.field=${encodeURIComponent(group.field)}` : "";
   const highlightParam = buildHighlight(hl);
 
-	return `${mainQuery}` +
+	return mainQuery +
 		`&${queryParams.length > 0 ? queryParams : ""}` +
 		`${sortParam.length > 0 ? `&sort=${sortParam}` : ""}` +
 		`${facetFieldParam.length > 0 ? `&${facetFieldParam}` : ""}` +
