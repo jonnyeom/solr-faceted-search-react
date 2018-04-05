@@ -105,6 +105,23 @@ const buildMainQuery = (fields, mainQueryField) => {
   return qs;
 };
 
+const buildHighlight = (highlight) => {
+	let hlQs = "";
+  // If highlight is not set, then exit.
+  if (highlight !== null && typeof highlight === "object") {
+    let hlParams = "&hl=on";
+
+    for (const key of Object.keys(highlight)) {
+      if (typeof highlight[key] === "object") {
+        hlParams += `&hl.${key}=${highlight[key]}`;
+      }
+    }
+
+    hlQs = hlParams;
+  }
+  return hlQs;
+};
+
 const solrQuery = (query, format = {wt: "json"}) => {
 	const {
 			searchFields,
@@ -116,7 +133,8 @@ const solrQuery = (query, format = {wt: "json"}) => {
 			pageStrategy,
 			cursorMark,
 			idField,
-			group
+			group,
+			hl
 		} = query;
 
 	const mainQueryField = Object.hasOwnProperty.call(query, "mainQueryField") ? query.mainQueryField : "";
@@ -135,6 +153,7 @@ const solrQuery = (query, format = {wt: "json"}) => {
 
 	const sortParam = buildSort(sortFields.concat(idSort));
 	const groupParam = group && group.field ? `group=on&group.field=${encodeURIComponent(group.field)}` : "";
+  const highlightParam = buildHighlight(hl);
 
 	return `${mainQuery}` +
 		`&${queryParams.length > 0 ? queryParams : ""}` +
@@ -148,7 +167,8 @@ const solrQuery = (query, format = {wt: "json"}) => {
 		`&${cursorMarkParam}` +
 		(start === null ? "" : `&start=${start}`) +
 		"&facet=on" +
-		`&${buildFormat(format)}`;
+		`&${buildFormat(format)}`+
+		`${highlightParam}`;
 };
 
 export default solrQuery;
