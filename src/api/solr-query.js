@@ -188,6 +188,8 @@ export {
 	textFieldToQueryFilter,
 	fieldToQueryFilter,
 	buildQuery,
+	buildMainQuery,
+	buildHighlight,
 	facetFields,
 	facetSorts,
 	buildSort,
