@@ -50,7 +50,8 @@ describe("SolrClient", () => { //eslint-disable-line no-undef
 				searchFields: "searchFields",
 				sortFields: "sortFields",
 				url: "url",
-				hl: "hl=on"
+				hl: "hl=on",
+				mainQueryField: "field_name"
 			});
 
 			sinon.stub(underTest, "sendQuery", (queryState) => {
@@ -64,7 +65,8 @@ describe("SolrClient", () => { //eslint-disable-line no-undef
 						url: "url",
 						rows: DEFAULT_ROWS,
 						group: undefined,
-						hl: "hl=on"
+						hl: "hl=on",
+						mainQueryField: "field_name"
 					});
 					done();
 				} catch(e) {
