@@ -163,7 +163,7 @@ const solrQuery = (query, format = {wt: "json"}) => {
   const highlightParam = buildHighlight(hl);
 
 	return mainQuery +
-		`&${queryParams.length > 0 ? queryParams : ""}` +
+		`${queryParams.length > 0 ? `&${queryParams}` : ""}` +
 		`${sortParam.length > 0 ? `&sort=${sortParam}` : ""}` +
 		`${facetFieldParam.length > 0 ? `&${facetFieldParam}` : ""}` +
 		`${facetSortParams.length > 0 ? `&${facetSortParams}` : ""}` +
