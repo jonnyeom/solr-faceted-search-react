@@ -95,7 +95,7 @@ const buildMainQuery = (fields, mainQueryField) => {
     qs += params.join("&");
   }
   // If there is only one main query field, add only it.
-  else if (params.length === 1)  {
+  else if (params.length === 1) {
     qs += params[0];
   }
   // If there are no main query fields, send the wildcard query.
@@ -109,7 +109,7 @@ const buildHighlight = (highlight) => {
 	let hlQs = "";
   // If highlight is set, then populate params from keys/values.
   if (highlight !== null && typeof highlight === "object") {
-    let hlParams = "&hl=on";
+    let hlParams = "hl=on";
 
     for (const key of Object.keys(highlight)) {
 			// Support nested objects like hl.simple.tags
@@ -174,8 +174,8 @@ const solrQuery = (query, format = {wt: "json"}) => {
 		`&${cursorMarkParam}` +
 		(start === null ? "" : `&start=${start}`) +
 		"&facet=on" +
-		`&${buildFormat(format)}`+
-		`${highlightParam}`;
+		(highlightParam === "" ? "" : `&${highlightParam}`) +
+		`&${buildFormat(format)}`;
 };
 
 export default solrQuery;
