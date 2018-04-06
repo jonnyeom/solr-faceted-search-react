@@ -6,8 +6,7 @@ const initialState = {
 	pageStrategy: null,
 	start: null,
 	group: null,
-	hl: null,
-	mainQueryField: null
+	hl: null
 };
 
 const setQueryFields = (state, action) => {
@@ -20,8 +19,7 @@ const setQueryFields = (state, action) => {
 		pageStrategy: action.pageStrategy,
 		start: action.start,
 		group: action.group,
-		hl: action.hl,
-		mainQueryField: action.mainQueryField
+		hl: action.hl
 	};
 };
 
