@@ -206,6 +206,13 @@ describe("solr-query", () => { //eslint-disable-line no-undef
 			}])).toEqual("");
 		});
 
+    it("should ignore query fields where field.field is equal to the mainQueryField value", () => {  //eslint-disable-line no-undef
+      expect(buildQuery([{
+        type: "text",
+        value: "bones",
+        field: "field_name"
+      }], "field_name")).toEqual("");
+    });
 
 		it("should ignore facet fields where field.value is null or empty", () => { //eslint-disable-line no-undef
 			expect(buildQuery([{
