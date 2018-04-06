@@ -115,12 +115,12 @@ const buildHighlight = (highlight) => {
 			// Support nested objects like hl.simple.tags
       if (typeof highlight[key] === "object") {
         for (const nestedKey of Object.keys(highlight[key])) {
-          hlParams += `&hl.${key}.${nestedKey}=${highlight[key][nestedKey]}`;
+          hlParams += `&hl.${key}.${nestedKey}=${encodeURIComponent(highlight[key][nestedKey])}`;
         }
       }
       // Support flat key/values like hl.fl=my_field_name
       else {
-        hlParams += `&hl.${key}=${highlight[key]}`;
+        hlParams += `&hl.${key}=${encodeURIComponent(highlight[key])}`;
       }
     }
 
