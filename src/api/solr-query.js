@@ -144,7 +144,7 @@ const solrQuery = (query, format = {wt: "json"}) => {
 			hl
 		} = query;
 
-	const mainQueryField = Object.hasOwnProperty.call(query, "mainQueryField") ? query.mainQueryField : "";
+	const mainQueryField = Object.hasOwnProperty.call(query, "mainQueryField") ? query.mainQueryField : null;
 
 	const filters = (query.filters || []).map((filter) => ({...filter, type: filter.type || "text"}));
 	const mainQuery = buildMainQuery(searchFields.concat(filters), mainQueryField);
