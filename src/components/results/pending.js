@@ -3,13 +3,13 @@ import React from "react";
 
 class Pending extends React.Component {
 
-	render() {
-		return <span>Waiting for results</span>;
-	}
+  render() {
+    return <span>Waiting for results</span>;
+  }
 }
 
 Pending.propTypes = {
-	bootstrapCss: PropTypes.bool
+  bootstrapCss: PropTypes.bool
 };
 
 export default Pending;
