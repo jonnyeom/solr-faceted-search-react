@@ -16,6 +16,7 @@ class SolrClient {
 			results: {
 				facets: [],
 				docs: [],
+				highlighting: [],
 				numFound: 0
 			}
 		};

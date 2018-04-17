@@ -51,7 +51,9 @@ const fieldToQueryFilter = (field) => {
 	return null;
 };
 
-const buildQuery = (fields) => fields
+const buildQuery = (fields, mainQueryField) => fields
+	// Do not include main query field in filter field query param.
+  .filter((searchField) => (!Object.hasOwnProperty.call(searchField, "field") || (Object.hasOwnProperty.call(searchField, "field") && searchField.field !== mainQueryField)))
 	.map(fieldToQueryFilter)
 	.filter((queryFilter) => queryFilter !== null)
 	.map((queryFilter) => `fq=${queryFilter}`)
@@ -81,6 +83,52 @@ const buildFormat = (format) => Object.keys(format)
 	.map((key) => `${key}=${encodeURIComponent(format[key])}`)
 	.join("&");
 
+const buildMainQuery = (fields, mainQueryField) => {
+  let qs = "q=";
+  let params = fields.filter(function (searchField) {
+    return searchField.field === mainQueryField;
+  }).map(function (searchField) {
+    return fieldToQueryFilter(searchField);
+  });
+  // If there are multiple main query fields, join them.
+  if (params.length > 1) {
+    qs += params.join("&");
+  }
+  // If there is only one main query field, add only it.
+  else if (params.length === 1) {
+    qs += params[0];
+  }
+  // If there are no main query fields, send the wildcard query.
+  else {
+    qs += "*:*";
+  }
+  return qs;
+};
+
+const buildHighlight = (highlight) => {
+	let hlQs = "";
+  // If highlight is set, then populate params from keys/values.
+  if (highlight !== null && typeof highlight === "object") {
+    let hlParams = "hl=on";
+
+    for (const key of Object.keys(highlight)) {
+			// Support nested objects like hl.simple.tags
+      if (typeof highlight[key] === "object") {
+        for (const nestedKey of Object.keys(highlight[key])) {
+          hlParams += `&hl.${key}.${nestedKey}=${encodeURIComponent(highlight[key][nestedKey])}`;
+        }
+      }
+      // Support flat key/values like hl.fl=my_field_name
+      else {
+        hlParams += `&hl.${key}=${encodeURIComponent(highlight[key])}`;
+      }
+    }
+
+    hlQs = hlParams;
+  }
+  return hlQs;
+};
+
 const solrQuery = (query, format = {wt: "json"}) => {
 	const {
 			searchFields,
@@ -92,11 +140,15 @@ const solrQuery = (query, format = {wt: "json"}) => {
 			pageStrategy,
 			cursorMark,
 			idField,
-			group
+			group,
+			hl
 		} = query;
 
+	const mainQueryField = Object.hasOwnProperty.call(query, "mainQueryField") ? query.mainQueryField : null;
+
 	const filters = (query.filters || []).map((filter) => ({...filter, type: filter.type || "text"}));
-	const queryParams = buildQuery(searchFields.concat(filters));
+	const mainQuery = buildMainQuery(searchFields.concat(filters), mainQueryField);
+  const queryParams = buildQuery(searchFields.concat(filters), mainQueryField);
 
 	const facetFieldParam = facetFields(searchFields);
 	const facetSortParams = facetSorts(searchFields);
@@ -108,9 +160,10 @@ const solrQuery = (query, format = {wt: "json"}) => {
 
 	const sortParam = buildSort(sortFields.concat(idSort));
 	const groupParam = group && group.field ? `group=on&group.field=${encodeURIComponent(group.field)}` : "";
+  const highlightParam = buildHighlight(hl);
 
-
-	return `q=*:*&${queryParams.length > 0 ? queryParams : ""}` +
+	return mainQuery +
+		`${queryParams.length > 0 ? `&${queryParams}` : ""}` +
 		`${sortParam.length > 0 ? `&sort=${sortParam}` : ""}` +
 		`${facetFieldParam.length > 0 ? `&${facetFieldParam}` : ""}` +
 		`${facetSortParams.length > 0 ? `&${facetSortParams}` : ""}` +
@@ -121,6 +174,7 @@ const solrQuery = (query, format = {wt: "json"}) => {
 		`&${cursorMarkParam}` +
 		(start === null ? "" : `&start=${start}`) +
 		"&facet=on" +
+		(highlightParam === "" ? "" : `&${highlightParam}`) +
 		`&${buildFormat(format)}`;
 };
 
@@ -134,6 +188,8 @@ export {
 	textFieldToQueryFilter,
 	fieldToQueryFilter,
 	buildQuery,
+	buildMainQuery,
+	buildHighlight,
 	facetFields,
 	facetSorts,
 	buildSort,

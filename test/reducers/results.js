@@ -17,7 +17,8 @@ describe("resultsReducer", () => { //eslint-disable-line no-undef
 				},
 				"facet_counts": {
 					"facet_fields": ["123"]
-				}
+				},
+				highlighting: ["123"]
 			}
 		})).toEqual({
 			init: "bar",
@@ -25,7 +26,8 @@ describe("resultsReducer", () => { //eslint-disable-line no-undef
 			numFound: 123,
 			facets: ["123"],
 			pending: false,
-			grouped: {}
+			grouped: {},
+			highlighting: ["123"]
 		});
 	});
 
@@ -55,7 +57,8 @@ describe("resultsReducer", () => { //eslint-disable-line no-undef
 				"some_grouped_field": {
 					matches: 123
 				}
-			}
+			},
+			highlighting: []
 		});
 	});
 

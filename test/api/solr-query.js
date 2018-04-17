@@ -7,6 +7,8 @@ import {
 	textFieldToQueryFilter,
 	fieldToQueryFilter,
 	buildQuery,
+	buildMainQuery,
+	buildHighlight,
 	facetFields,
 	facetSorts,
 	buildSort,
@@ -206,6 +208,13 @@ describe("solr-query", () => { //eslint-disable-line no-undef
 			}])).toEqual("");
 		});
 
+    it("should ignore query fields where field.field is equal to the mainQueryField value", () => {  //eslint-disable-line no-undef
+      expect(buildQuery([{
+        type: "text",
+        value: "bones",
+        field: "field_name"
+      }], "field_name")).toEqual("");
+    });
 
 		it("should ignore facet fields where field.value is null or empty", () => { //eslint-disable-line no-undef
 			expect(buildQuery([{
@@ -266,7 +275,87 @@ describe("solr-query", () => { //eslint-disable-line no-undef
 		});
 	});
 
-	describe("facetFields", () => {  //eslint-disable-line no-undef
+	describe("buildMainQuery", () => { //eslint-disable-line no-undef
+		it("should create a main query param set to field.field:field.value where field.field matches the mainQueryField value", () => {  //eslint-disable-line no-undef
+      expect(buildMainQuery([{
+        type: "text",
+        value: "val",
+        field: "field_name"
+      }], "field_name")).toEqual("q=field_name%3Aval");
+    });
+
+		it("should ignore fields where field.field does not equal mainQueryField value", () => {  //eslint-disable-line no-undef
+			expect(buildMainQuery([{
+				type: "text",
+				value: "val",
+				field: "field_name"
+			}], "some_other_field_name")).toEqual("q=*:*");
+		});
+
+		it("should set main query param to null when the mainQueryField field value is empty", () => { //eslint-disable-line no-undef
+			expect(buildMainQuery([{
+				type: "text",
+				field: "field_name",
+				value: ""
+			}], "field_name")).toEqual("q=null");
+		});
+
+
+    it("should return the wildcard query *:* when mainQueryField is not set", () => {  //eslint-disable-line no-undef
+      expect(buildMainQuery([{
+        type: "text",
+        value: "val",
+        field: "field_name"
+      }], null)).toEqual("q=*:*");
+    });
+	});
+
+
+  describe("buildHighlight", () => { //eslint-disable-line no-undef
+    it("should create the hl param even when no further config is added", () => {  //eslint-disable-line no-undef
+      expect(buildHighlight({})).toEqual("hl=on");
+    });
+
+    it("should create params for the provided settings", () => {  //eslint-disable-line no-undef
+      expect(buildHighlight({
+        fl: "field_name",
+        usePhraseHighlighter: true
+      })).toEqual("hl=on&hl.fl=field_name&hl.usePhraseHighlighter=true");
+    });
+
+    it("should join query parts with ampersand", () => {  //eslint-disable-line no-undef
+      const query = buildHighlight({
+        fl: "field_name",
+        usePhraseHighlighter: true,
+      });
+
+      const parts = query.split("&");
+
+      expect(parts.length).toEqual(3);
+      expect(parts.indexOf("hl=on") > -1).toEqual(true);
+      expect(parts.indexOf("hl.fl=field_name") > -1).toEqual(true);
+      expect(parts.indexOf("hl.usePhraseHighlighter=true") > -1).toEqual(true);
+    });
+
+    it("should support 1 level of object nesting (i.e. for hl.simple.pre)", () => {  //eslint-disable-line no-undef
+      const query = buildHighlight({
+        fl: "field_name",
+        usePhraseHighlighter: true,
+        simple: {
+          pre: "<b>",
+          post: "</b>"
+        }
+      });
+
+      const parts = query.split("&");
+
+      expect(parts.length).toEqual(5);
+      expect(parts.indexOf("hl.simple.pre=" + encodeURIComponent("<b>")) > -1).toEqual(true);
+      expect(parts.indexOf("hl.simple.post=" + encodeURIComponent("</b>")) > -1).toEqual(true);
+    });
+  });
+
+  describe("facetFields", () => {  //eslint-disable-line no-undef
 		it("should pass along all the facet field names to facet.field=field_name", () => {  //eslint-disable-line no-undef
 			const facetParam = facetFields([{
 				type: "text",

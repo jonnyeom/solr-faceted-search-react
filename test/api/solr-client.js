@@ -14,7 +14,8 @@ describe("SolrClient", () => { //eslint-disable-line no-undef
 			const underTest = new SolrClient({
 				onChange: changeFunc,
 				queryProp1: "queryProp1",
-				queryProp2: "queryProp2"
+				queryProp2: "queryProp2",
+				hl: "hl=on"
 			});
 
 			expect(underTest.onChange()).toEqual("confirm-changeFunc");
@@ -23,12 +24,14 @@ describe("SolrClient", () => { //eslint-disable-line no-undef
 				queryProp1: "queryProp1",
 				queryProp2: "queryProp2",
 				pageStrategy: "paginate",
+				hl: "hl=on",
 				rows: DEFAULT_ROWS
 			});
 
 			expect(underTest.state.results).toEqual({
 				facets: [],
 				docs: [],
+				highlighting: [],
 				numFound: 0
 			});
 		});
@@ -46,7 +49,9 @@ describe("SolrClient", () => { //eslint-disable-line no-undef
 				onChange: () => {},
 				searchFields: "searchFields",
 				sortFields: "sortFields",
-				url: "url"
+				url: "url",
+				hl: "hl=on",
+				mainQueryField: "field_name"
 			});
 
 			sinon.stub(underTest, "sendQuery", (queryState) => {
@@ -59,7 +64,9 @@ describe("SolrClient", () => { //eslint-disable-line no-undef
 						sortFields: "sortFields",
 						url: "url",
 						rows: DEFAULT_ROWS,
-						group: undefined
+						group: undefined,
+						hl: "hl=on",
+						mainQueryField: "field_name"
 					});
 					done();
 				} catch(e) {
@@ -308,7 +315,8 @@ describe("SolrClient", () => { //eslint-disable-line no-undef
 							},
 							"facet_counts": {
 								"facet_fields": ["123"]
-							}
+							},
+							highlighting: ["123"]
 						}
 					});
 				} catch (e) {
@@ -326,7 +334,8 @@ describe("SolrClient", () => { //eslint-disable-line no-undef
 							numFound: 123,
 							facets: ["123"],
 							pending: false,
-							grouped: {}
+							grouped: {},
+							highlighting: ["123"]
 						});
 						finalize();
 					} catch (e) {
