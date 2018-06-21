@@ -291,6 +291,8 @@ ReactDOM.render(
 ```javascript
 {
 	url: "..." // the search url
+	userpass: "btoa('username:password')" // [optional, the username/password if your Solr server requires basic auth ]
+	// This login should only allow read access and should NOT be considered secure as it will be trivially accessible by the client.
 	searchFields: [{...}] // the search field configuration
 	sortFields: [{...}] // the sort field configuration,
 	onChange: (state, handlers) => {...} // the change handler for query and result state
