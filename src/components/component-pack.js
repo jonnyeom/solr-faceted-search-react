@@ -16,26 +16,26 @@ import SortMenu from "./sort-menu";
 import CurrentQuery from "./current-query";
 
 export default {
-	searchFields: {
-		text: TextSearch,
-		"list-facet": ListFacet,
-		"range-facet": RangeFacet,
-		"period-range-facet": RangeFacet,
-		container: SearchFieldContainer,
-		currentQuery: CurrentQuery
-	},
-	results: {
-		result: Result,
-		resultCount: CountLabel,
-		header: ResultHeader,
-		list: ResultList,
-		container: ResultContainer,
-		pending: ResultPending,
-		preloadIndicator: PreloadIndicator,
-		csvExport: CsvExport,
-		paginate: ResultPagination
-	},
-	sortFields: {
-		menu: SortMenu
-	}
+  searchFields: {
+    text: TextSearch,
+    "list-facet": ListFacet,
+    "range-facet": RangeFacet,
+    "period-range-facet": RangeFacet,
+    container: SearchFieldContainer,
+    currentQuery: CurrentQuery
+  },
+  results: {
+    result: Result,
+    resultCount: CountLabel,
+    header: ResultHeader,
+    list: ResultList,
+    container: ResultContainer,
+    pending: ResultPending,
+    preloadIndicator: PreloadIndicator,
+    csvExport: CsvExport,
+    paginate: ResultPagination
+  },
+  sortFields: {
+    menu: SortMenu
+  }
 };
