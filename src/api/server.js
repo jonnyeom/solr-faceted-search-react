@@ -17,8 +17,9 @@ server.submitQuery = (query, callback) => {
 		data: solrQuery(query),
 		method: "POST",
 		headers: {
-			"Content-type": "application/x-www-form-urlencoded"
-		}
+			"Content-type": "application/x-www-form-urlencoded",
+			...(query.userpass ? {"Authorization": "Basic " + query.userpass} : {}),
+        }
 	}, (err, resp) => {
 		if (resp.statusCode >= 200 && resp.statusCode < 300) {
 			callback({type: "SET_RESULTS", data: JSON.parse(resp.body)});
@@ -38,8 +39,9 @@ server.fetchCsv = (query, callback) => {
 		}),
 		method: "POST",
 		headers: {
-			"Content-type": "application/x-www-form-urlencoded"
-		}
+			"Content-type": "application/x-www-form-urlencoded",
+			...(query.userpass ? {"Authorization": "Basic " + query.userpass} : {}),
+        }
 	}, (err, resp) => {
 		if (resp.statusCode >= 200 && resp.statusCode < 300) {
 			callback(resp.body);
