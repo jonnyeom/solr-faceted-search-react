@@ -96,7 +96,12 @@ const buildMainQuery = (fields, mainQueryField) => {
   }
   // If there is only one main query field, add only it.
   else if (params.length === 1) {
-    qs += params[0];
+    if (params[0] !== null) {
+      qs += params[0];
+    } else {
+      // If query field exists but is null send the wildcard query.
+      qs += "*:*";
+    }
   }
   // If there are no main query fields, send the wildcard query.
   else {
