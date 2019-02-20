@@ -199,6 +199,7 @@ class SolrClient {
 
   getHandlers() {
     return {
+      onTextInputChange: this.setSuggestQuery.bind(this),
       onSortFieldChange: this.setSortFieldValue.bind(this),
       onSearchFieldChange: this.setSearchFieldValue.bind(this),
       onFacetSortChange: this.setFacetSort.bind(this),
