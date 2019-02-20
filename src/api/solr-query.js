@@ -185,6 +185,46 @@ const solrQuery = (query, format = {wt: "json"}) => {
 
 export default solrQuery;
 
+const buildSuggestQuery = (fields, suggestQueryField) => {
+  let qs = "q=";
+  let params = fields.filter(function (searchField) {
+    return searchField.field === suggestQueryField;
+  }).map(function (searchField) {
+    return fieldToQueryFilter(searchField);
+  });
+  // If there are multiple suggest query fields, join them.
+  if (params.length > 1) {
+    qs += params.join("&");
+  }
+  // If there is only one suggest query field, add only it.
+  else if (params.length === 1) {
+    if (params[0] !== null) {
+      qs += params[0];
+    } else {
+      // If query field exists but is null send the wildcard query.
+      qs += "*:*";
+    }
+  }
+  // If there are no suggest query fields, send the wildcard query.
+  else {
+    qs += "*:*";
+  }
+  return qs;
+};
+
+const solrSuggestQuery = (suggestQuery, format = {wt: "json"}) => {
+  const {
+    searchFields,
+    suggestionRows
+  } = suggestQuery;
+
+  const suggestQueryField = Object.hasOwnProperty.call(suggestQuery, "suggestQueryField") ? suggestQuery.suggestQueryField : null;
+  const mainSuggestQuery = buildSuggestQuery(searchFields, suggestQueryField);
+
+  return mainSuggestQuery +
+    `&rows=${suggestionRows}` +
+    `&${buildFormat(format)}`;
+};
 
 export {
   rangeFacetToQueryFilter,
@@ -194,9 +234,11 @@ export {
   fieldToQueryFilter,
   buildQuery,
   buildMainQuery,
+  buildSuggestQuery,
   buildHighlight,
   facetFields,
   facetSorts,
   buildSort,
-  solrQuery
+  solrQuery,
+  solrSuggestQuery
 };
