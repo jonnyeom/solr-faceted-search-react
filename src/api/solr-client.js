@@ -1,5 +1,7 @@
 import queryReducer from "../reducers/query";
 import resultReducer from "../reducers/results";
+import suggestionReducer from "../reducers/suggestions";
+import suggestQueryReducer from "../reducers/suggestQuery";
 // import { submitQuery, fetchCsv } from "./server";
 import server from "./server";
 
@@ -80,6 +82,31 @@ class SolrClient {
     server.submitQuery(query, (action) => {
       this.state.results = resultReducer(this.state.results, action);
       this.state.query = queryReducer(this.state.query, action);
+      this.onChange(this.state, this.getHandlers());
+    });
+  }
+
+  setSuggestQuery(autocomplete, value) {
+    const payload = {
+      type: "SET_SUGGEST_QUERY",
+      suggestQuery: {
+        mode: autocomplete.mode,
+        url: autocomplete.url,
+        suggestQueryField: autocomplete.queryField,
+        searchFields: [{field: autocomplete.queryField, value: value, type: 'text' }],
+        suggestionRows: autocomplete.suggestionRows,
+        value
+      },
+    };
+    this.sendSuggestQuery(suggestQueryReducer(this.state.suggestQuery, payload));
+  }
+
+  sendSuggestQuery(suggestQuery = this.state.suggestQuery) {
+    delete suggestQuery.cursorMark;
+    this.state.suggestQuery = suggestQuery;
+    server.submitSuggestQuery(suggestQuery, (action) => {
+      this.state.suggestions = suggestionReducer(this.state.suggestions, action);
+      this.state.suggestQuery = suggestQueryReducer(this.state.suggestQuery, action);
       this.onChange(this.state, this.getHandlers());
     });
   }
