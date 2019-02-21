@@ -159,6 +159,11 @@ class SolrClient {
     const payload = {type: "SET_SEARCH_FIELDS", newFields: newFields};
 
     this.sendQuery(queryReducer(this.state.query, payload));
+    // Enable the the autosuggest input to be cleared cleared
+    // but only if autcomplete has been configured.
+    if (Object.hasOwnProperty.call(this.state, "suggestQuery")) {
+      this.state.suggestQuery = suggestQueryReducer(this.state.suggestQuery, payload);
+    }
   }
 
   setFacetSort(field, value) {
