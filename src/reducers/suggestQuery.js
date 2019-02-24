@@ -2,7 +2,6 @@ const initialState = {};
 
 const setSuggestQuery = (state, action) => {
   return {
-    ...state,
     ...action.suggestQuery
   };
 };

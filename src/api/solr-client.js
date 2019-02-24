@@ -86,23 +86,30 @@ class SolrClient {
     });
   }
 
-  setSuggestQuery(autocomplete, value) {
+  setSuggestQuery(query, autocomplete, value) {
+    const {searchFields} = query;
+    // Add the current text field value to the searchFields array.
+    const newFields = searchFields
+      .map((searchField) => searchField.field === query.mainQueryField ? {...searchField, value: value} : searchField);
     const payload = {
       type: "SET_SUGGEST_QUERY",
       suggestQuery: {
+        searchFields: newFields,
+        sortFields: query.sortFields,
+        filters: query.filters,
+        userpass: query.userpass,
+        mainQueryField: query.mainQueryField,
+        start: 0,
         mode: autocomplete.mode,
         url: autocomplete.url,
-        suggestQueryField: autocomplete.queryField,
-        searchFields: [{field: autocomplete.queryField, value: value, type: 'text' }],
-        suggestionRows: autocomplete.suggestionRows,
+        rows: autocomplete.suggestionRows,
         value
-      },
+      }
     };
     this.sendSuggestQuery(suggestQueryReducer(this.state.suggestQuery, payload));
   }
 
   sendSuggestQuery(suggestQuery = this.state.suggestQuery) {
-    delete suggestQuery.cursorMark;
     this.state.suggestQuery = suggestQuery;
     server.submitSuggestQuery(suggestQuery, (action) => {
       this.state.suggestions = suggestionReducer(this.state.suggestions, action);

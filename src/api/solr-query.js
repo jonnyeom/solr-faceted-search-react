@@ -190,7 +190,11 @@ const buildSuggestQuery = (fields, suggestQueryField) => {
   let params = fields.filter(function (searchField) {
     return searchField.field === suggestQueryField;
   }).map(function (searchField) {
-    return fieldToQueryFilter(searchField);
+    // To support search-as-you-type we add a wildcard to match zero or more
+    // additional characters at the end of the users search term.
+    // We also set the default field to the mainQueryField.
+    // @see: https://opensourceconnections.com/blog/2013/06/07/search-as-you-type-with-solr/
+    return `${searchField.value}+${searchField.value}*&df=${searchField.field}`;
   });
   // If there are multiple suggest query fields, join them.
   if (params.length > 1) {
@@ -200,29 +204,29 @@ const buildSuggestQuery = (fields, suggestQueryField) => {
   else if (params.length === 1) {
     if (params[0] !== null) {
       qs += params[0];
-    } else {
-      // If query field exists but is null send the wildcard query.
-      qs += "*:*";
     }
-  }
-  // If there are no suggest query fields, send the wildcard query.
-  else {
-    qs += "*:*";
   }
   return qs;
 };
 
 const solrSuggestQuery = (suggestQuery, format = {wt: "json"}) => {
   const {
+    rows,
     searchFields,
-    suggestionRows
+    filters
   } = suggestQuery;
 
-  const suggestQueryField = Object.hasOwnProperty.call(suggestQuery, "suggestQueryField") ? suggestQuery.suggestQueryField : null;
-  const mainSuggestQuery = buildSuggestQuery(searchFields, suggestQueryField);
+  const mainQueryField = Object.hasOwnProperty.call(suggestQuery, "mainQueryField") ? suggestQuery.mainQueryField : null;
 
-  return mainSuggestQuery +
-    `&rows=${suggestionRows}` +
+  const queryFilters = (filters || []).map((filter) => ({...filter, type: filter.type || "text"}));
+  const mainQuery = buildSuggestQuery(searchFields.concat(queryFilters), mainQueryField);
+  const queryParams = buildQuery(searchFields.concat(queryFilters), mainQueryField);
+  const facetFieldParam = facetFields(searchFields);
+
+  return mainQuery +
+    `${queryParams.length > 0 ? `&${queryParams}` : ""}` +
+    `${facetFieldParam.length > 0 ? `&${facetFieldParam}` : ""}` +
+    `&rows=${rows}` +
     `&${buildFormat(format)}`;
 };
 

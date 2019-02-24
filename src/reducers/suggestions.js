@@ -6,7 +6,6 @@ const initialState = {
 export default function (state = initialState, action) {
   switch (action.type) {
     case "SET_SUGGESTIONS":
-      console.log(action);
       return {
         ...state,
         docs: action.data.response ? action.data.response.docs : [],
