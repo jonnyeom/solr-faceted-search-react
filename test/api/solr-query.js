@@ -292,12 +292,12 @@ describe("solr-query", () => { //eslint-disable-line no-undef
       }], "some_other_field_name")).toEqual("q=*:*");
     });
 
-    it("should set main query param to null when the mainQueryField field value is empty", () => { //eslint-disable-line no-undef
+    it("should set main query param to wildcards when the mainQueryField field value is empty", () => { //eslint-disable-line no-undef
       expect(buildMainQuery([{
         type: "text",
         field: "field_name",
         value: ""
-      }], "field_name")).toEqual("q=null");
+      }], "field_name")).toEqual("q=*:*");
     });
 
 
@@ -326,7 +326,7 @@ describe("solr-query", () => { //eslint-disable-line no-undef
     it("should join query parts with ampersand", () => {  //eslint-disable-line no-undef
       const query = buildHighlight({
         fl: "field_name",
-        usePhraseHighlighter: true,
+        usePhraseHighlighter: true
       });
 
       const parts = query.split("&");
