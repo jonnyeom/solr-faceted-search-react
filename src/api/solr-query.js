@@ -194,8 +194,10 @@ const buildSuggestQuery = (fields, suggestQueryField) => {
     // additional characters at the end of the users search term.
     // @see: https://lucene.apache.org/solr/guide/6_6/the-standard-query-parser.html#TheStandardQueryParser-WildcardSearches
     // @see: https://opensourceconnections.com/blog/2013/06/07/search-as-you-type-with-solr/
-    // We also set the default field to the mainQueryField.
-    return `${searchField.value}+${searchField.value}*&df=${searchField.field}`;
+    // We also set the default field to the suggestQueryField.
+    return searchField.value !== ""
+      ? `${searchField.value}+${searchField.value}*&df=${searchField.field}`
+      : "";
   });
   // If there are multiple suggest query fields, join them.
   if (params.length > 1) {
