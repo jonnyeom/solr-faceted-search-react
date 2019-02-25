@@ -8,6 +8,7 @@ import {
   fieldToQueryFilter,
   buildQuery,
   buildMainQuery,
+  buildSuggestQuery,
   buildHighlight,
   facetFields,
   facetSorts,
@@ -310,6 +311,40 @@ describe("solr-query", () => { //eslint-disable-line no-undef
     });
   });
 
+  describe("buildSuggestQuery", () => { //eslint-disable-line no-undef
+    it("should create a main query param set to field.value+field.value* and a default field param set to field.field where field.field matches the suggestQueryField value", () => {  //eslint-disable-line no-undef
+      expect(buildSuggestQuery([{
+        type: "text",
+        value: "val",
+        field: "field_name"
+      }], "field_name")).toEqual("q=val+val*&df=field_name");
+    });
+
+    it("should not set a main query when populated search fields do not equal suggestQueryField value", () => {  //eslint-disable-line no-undef
+      expect(buildSuggestQuery([{
+        type: "text",
+        value: "val",
+        field: "field_name"
+      }], "some_other_field_name")).toEqual("q=");
+    });
+
+    it("should not set a main query param when the mainQueryField field value is empty", () => { //eslint-disable-line no-undef
+      expect(buildSuggestQuery([{
+        type: "text",
+        field: "field_name",
+        value: ""
+      }], "field_name")).toEqual("q=");
+    });
+
+    // @todo support query fields / default field being set in config
+    it("should not set a main query when mainQueryField is not set", () => {  //eslint-disable-line no-undef
+      expect(buildSuggestQuery([{
+        type: "text",
+        value: "val",
+        field: "field_name"
+      }], null)).toEqual("q=");
+    });
+  });
 
   describe("buildHighlight", () => { //eslint-disable-line no-undef
     it("should create the hl param even when no further config is added", () => {  //eslint-disable-line no-undef
@@ -462,7 +497,6 @@ describe("solr-query", () => { //eslint-disable-line no-undef
       }])).toEqual("field_name%20asc,other_field_name%20desc");
     });
   });
-
 
   describe("solrQuery", () => {  //eslint-disable-line no-undef
     it("should set the q parameter", () => { //eslint-disable-line no-undef
@@ -631,5 +665,173 @@ describe("solr-query", () => { //eslint-disable-line no-undef
       expect(solrQuery(query).split("&").indexOf("group=on") > -1).toEqual(true);
       expect(solrQuery(query).split("&").indexOf("group.field=grouped_field") > -1).toEqual(true);
     });
+  });
+});
+
+describe("solrSuggestQuery", () => {  //eslint-disable-line no-undef
+  it("should not set the q parameter with no search fields", () => { //eslint-disable-line no-undef
+    const query = {
+      searchFields: [],
+      sortFields: [],
+      rows: 10,
+      start: 0
+    };
+    expect(solrQuery(query).split("&").indexOf("q=")).toEqual(-1);
+  });
+
+  it("should set the fq parameters", () => {  //eslint-disable-line no-undef
+    const query = {
+      searchFields: [],
+      sortFields: [],
+      rows: 10,
+      start: 0
+    };
+    expect(solrQuery({
+      ...query, searchFields: [
+        {type: "text", field: "field_name", value: "val"}]
+    }).split("&").indexOf("fq=field_name%3Aval") > -1).toEqual(true);
+  });
+
+  it("should set the fq parameters from static filters", () => {  //eslint-disable-line no-undef
+    const query = {
+      searchFields: [],
+      sortFields: [],
+      rows: 10,
+      start: 0
+    };
+    expect(solrQuery({
+      ...query, filters: [{field: "field_name", value: "val"}]
+    }).split("&").indexOf("fq=field_name%3Aval") > -1).toEqual(true);
+  });
+
+  it("should set the rows parameter", () => {  //eslint-disable-line no-undef
+    const query = {
+      searchFields: [],
+      sortFields: [],
+      rows: 5,
+      start: 0
+    };
+    expect(solrQuery(query).split("&").indexOf("rows=5") > -1).toEqual(true);
+  });
+
+  it("should (not) set the sort parameter", () => { //eslint-disable-line no-undef
+    const query = {
+      searchFields: [],
+      sortFields: [],
+      rows: 10,
+      start: 0
+    };
+    expect(solrQuery(query).indexOf("&sort=")).toEqual(-1);
+
+    expect(solrQuery({
+      ...query, sortFields: [{
+        field: "field_name",
+        value: "asc"
+      }]
+    }).split("&").indexOf("sort=field_name%20asc") > -1).toEqual(true);
+  });
+
+  it("should (not) set the facet.field parameters", () => {  //eslint-disable-line no-undef
+    const query = {
+      searchFields: [],
+      sortFields: [],
+      rows: 10,
+      start: 0
+    };
+    expect(solrQuery(query).indexOf("facet.field")).toEqual(-1);
+
+    expect(solrQuery({
+      ...query, searchFields: [{
+        field: "field_name",
+        type: "list-facet"
+      }]
+    }).split("&").indexOf("facet.field=field_name") > -1).toEqual(true);
+  });
+
+  it("should (not) set the start parameter", () => {  //eslint-disable-line no-undef
+    const query = {
+      searchFields: [],
+      sortFields: [],
+      rows: 10,
+      start: null
+    };
+    expect(solrQuery(query).indexOf("start=")).toEqual(-1);
+    expect(solrQuery({...query, start: 10}).indexOf("start=") > -1).toEqual(true);
+  });
+
+  it("should set the wt parameter to json", () => {  //eslint-disable-line no-undef
+    const query = {
+      searchFields: [],
+      sortFields: [],
+      rows: 10,
+      start: null
+    };
+    expect(solrQuery(query).split("&").indexOf("wt=json") > -1).toEqual(true);
+  });
+
+  it("should set the facet parameter to on", () => {  //eslint-disable-line no-undef
+    const query = {
+      searchFields: [],
+      sortFields: [],
+      rows: 10,
+      start: null
+    };
+    expect(solrQuery(query).split("&").indexOf("facet=on") > -1).toEqual(true);
+  });
+
+  it("should set the facet.limit parameter to -1 by default", () => {  //eslint-disable-line no-undef
+    const query = {
+      searchFields: [],
+      sortFields: [],
+      rows: 10,
+      start: null
+    };
+    expect(solrQuery(query).split("&").indexOf("facet.limit=-1") > -1).toEqual(true);
+  });
+
+  it("should set the facet.limit parameter from the facetLimit prop", () => {  //eslint-disable-line no-undef
+    const query = {
+      searchFields: [],
+      sortFields: [],
+      rows: 10,
+      start: null,
+      facetLimit: 100
+    };
+    expect(solrQuery(query).split("&").indexOf("facet.limit=100") > -1).toEqual(true);
+  });
+
+  it("should set the facet.sort parameter from the facetSort prop", () => {  //eslint-disable-line no-undef
+    const query = {
+      searchFields: [],
+      sortFields: [],
+      rows: 10,
+      start: null,
+      facetSort: "index"
+    };
+    expect(solrQuery(query).split("&").indexOf("facet.sort=index") > -1).toEqual(true);
+  });
+
+  it("should set the cursorMark parameter to * when pageStrategy is 'cursor' and cursor is not passed", () => { //eslint-disable-line no-undef
+    const query = {
+      searchFields: [],
+      sortFields: [],
+      rows: 10,
+      start: null,
+      facetSort: "index",
+      pageStrategy: "cursor"
+    };
+    expect(solrQuery(query).split("&").indexOf("cursorMark=*") > -1).toEqual(true);
+  });
+
+  it("should set the group param", () => { //eslint-disable-line no-undef
+    const query = {
+      searchFields: [],
+      sortFields: [],
+      rows: 10,
+      start: null,
+      group: {field: "grouped_field"}
+    };
+    expect(solrQuery(query).split("&").indexOf("group=on") > -1).toEqual(true);
+    expect(solrQuery(query).split("&").indexOf("group.field=grouped_field") > -1).toEqual(true);
   });
 });
