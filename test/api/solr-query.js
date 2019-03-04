@@ -277,12 +277,12 @@ describe("solr-query", () => { //eslint-disable-line no-undef
   });
 
   describe("buildMainQuery", () => { //eslint-disable-line no-undef
-    it("should create a main query param set to field.field:field.value where field.field matches the mainQueryField value", () => {  //eslint-disable-line no-undef
+    it("should create a main query param set to field.value where field.field matches the mainQueryField value", () => {  //eslint-disable-line no-undef
       expect(buildMainQuery([{
         type: "text",
         value: "val",
         field: "field_name"
-      }], "field_name")).toEqual("q=field_name%3Aval");
+      }], "field_name")).toEqual("q=val");
     });
 
     it("should ignore fields where field.field does not equal mainQueryField value", () => {  //eslint-disable-line no-undef
@@ -312,20 +312,36 @@ describe("solr-query", () => { //eslint-disable-line no-undef
   });
 
   describe("buildSuggestQuery", () => { //eslint-disable-line no-undef
-    it("should create a main query param set to field.value+field.value* and a default field param set to field.field where field.field matches the suggestQueryField value", () => {  //eslint-disable-line no-undef
+    it("should create a main query param set to field.value if appendWildcard is false", () => {  //eslint-disable-line no-undef
       expect(buildSuggestQuery([{
         type: "text",
         value: "val",
         field: "field_name"
-      }], "field_name")).toEqual("q=val+val*&df=field_name");
+      }], "field_name", false)).toEqual("q=val");
     });
 
-    it("should not set a main query when populated search fields do not equal suggestQueryField value", () => {  //eslint-disable-line no-undef
+    it("should create a main query param set to field.value+field.value* if appendWildcard is true and field.value is one word/chunk", () => {  //eslint-disable-line no-undef
       expect(buildSuggestQuery([{
         type: "text",
         value: "val",
         field: "field_name"
-      }], "some_other_field_name")).toEqual("q=");
+      }], "field_name", true)).toEqual("q=val+val*");
+    });
+
+    it("should create a main query param set to field.value+[last word/chunk in field.value]* if appendWildcard is true and field.value is more than one word/chunk", () => {  //eslint-disable-line no-undef
+      expect(buildSuggestQuery([{
+        type: "text",
+        value: "some val",
+        field: "field_name"
+      }], "field_name", true)).toEqual("q=some+val+val*");
+    });
+
+    it("should not set a main query when populated search fields do not equal mainQueryField value", () => {  //eslint-disable-line no-undef
+      expect(buildSuggestQuery([{
+        type: "text",
+        value: "val",
+        field: "field_name"
+      }], "some_other_field_name", true)).toEqual("q=");
     });
 
     it("should not set a main query param when the mainQueryField field value is empty", () => { //eslint-disable-line no-undef
@@ -333,10 +349,9 @@ describe("solr-query", () => { //eslint-disable-line no-undef
         type: "text",
         field: "field_name",
         value: ""
-      }], "field_name")).toEqual("q=");
+      }], "field_name", true)).toEqual("q=");
     });
 
-    // @todo support query fields / default field being set in config
     it("should not set a main query when mainQueryField is not set", () => {  //eslint-disable-line no-undef
       expect(buildSuggestQuery([{
         type: "text",
