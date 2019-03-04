@@ -173,30 +173,37 @@ const solrQuery = (query, format = {wt: "json"}) => {
 
 export default solrQuery;
 
-const buildSuggestQuery = (fields, suggestQueryField) => {
+const buildSuggestQuery = (fields, mainQueryField, appendWildcard) => {
   let qs = "q=";
   let params = fields.filter(function (searchField) {
-    return searchField.field === suggestQueryField;
+    return searchField.field === mainQueryField;
   }).map(function (searchField) {
-    // To support search-as-you-type we add a wildcard to match zero or more
-    // additional characters at the end of the users search term.
+    // Remove spaces on either end of the value.
+    const trimmed = searchField.value.trim();
+    // One method of supporting search-as-you-type is to append a wildcard '*'
+    //   to match zero or more additional characters at the end of the users search term.
     // @see: https://lucene.apache.org/solr/guide/6_6/the-standard-query-parser.html#TheStandardQueryParser-WildcardSearches
     // @see: https://opensourceconnections.com/blog/2013/06/07/search-as-you-type-with-solr/
-    // We also set the default field to the suggestQueryField.
-    return searchField.value !== ""
-      ? `${searchField.value}+${searchField.value}*&df=${searchField.field}`
-      : "";
-  });
-  // If there are multiple suggest query fields, join them.
-  if (params.length > 1) {
-    qs += params.join("&");
-  }
-  // If there is only one suggest query field, add only it.
-  else if (params.length === 1) {
-    if (params[0] !== null) {
-      qs += params[0];
+    if (appendWildcard && trimmed.length > 0) {
+      // Split into word chunks.
+      const words = trimmed.split(" ");
+      // If there are multiple chunks, join them with "+", repeat the last word + append "*".
+      if (words.length > 1) {
+        return `${words.join("+")}+${words.pop()}*`;
+      }
+      // If there is only 1 word, repeat it an append "*".
+      return `${words}+${words}*`;
     }
+    // If we are not supposed to append a wildcard, just return the value.
+    // ngram tokens/filters should be set up in solr config for
+    // the autocomplete endpoint request handler.
+    return trimmed;
+  });
+
+  if (params[0]) {
+    qs += params[0];
   }
+
   return qs;
 };
 
@@ -204,13 +211,14 @@ const solrSuggestQuery = (suggestQuery, format = {wt: "json"}) => {
   const {
     rows,
     searchFields,
-    filters
+    filters,
+    appendWildcard,
   } = suggestQuery;
 
   const mainQueryField = Object.hasOwnProperty.call(suggestQuery, "mainQueryField") ? suggestQuery.mainQueryField : null;
 
   const queryFilters = (filters || []).map((filter) => ({...filter, type: filter.type || "text"}));
-  const mainQuery = buildSuggestQuery(searchFields.concat(queryFilters), mainQueryField);
+  const mainQuery = buildSuggestQuery(searchFields.concat(queryFilters), mainQueryField, appendWildcard);
   const queryParams = buildQuery(searchFields.concat(queryFilters), mainQueryField);
   const facetFieldParam = facetFields(searchFields);
 
