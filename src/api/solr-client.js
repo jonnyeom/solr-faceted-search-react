@@ -103,6 +103,7 @@ class SolrClient {
         mode: autocomplete.mode,
         url: autocomplete.url,
         rows: autocomplete.suggestionRows || 5,
+        appendWildcard: autocomplete.appendWildcard || false,
         value
       }
     };
