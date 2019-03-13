@@ -84,30 +84,18 @@ const buildFormat = (format) => Object.keys(format)
   .join("&");
 
 const buildMainQuery = (fields, mainQueryField) => {
-  let qs = "q=";
   let params = fields.filter(function (searchField) {
     return searchField.field === mainQueryField;
   }).map(function (searchField) {
-    return fieldToQueryFilter(searchField);
+    return searchField.value;
   });
-  // If there are multiple main query fields, join them.
-  if (params.length > 1) {
-    qs += params.join("&");
+  // Add value of the mainQueryField to the q param, if there is one.
+  if (params[0]) {
+    return `q=${params[0]}`;
   }
-  // If there is only one main query field, add only it.
-  else if (params.length === 1) {
-    if (params[0] !== null) {
-      qs += params[0];
-    } else {
-      // If query field exists but is null send the wildcard query.
-      qs += "*:*";
-    }
-  }
-  // If there are no main query fields, send the wildcard query.
-  else {
-    qs += "*:*";
-  }
-  return qs;
+
+  // If query field exists but is null/empty/undefined send the wildcard query.
+  return "q=*:*";
 };
 
 const buildHighlight = (highlight) => {
@@ -185,6 +173,61 @@ const solrQuery = (query, format = {wt: "json"}) => {
 
 export default solrQuery;
 
+const buildSuggestQuery = (fields, mainQueryField, appendWildcard) => {
+  let qs = "q=";
+  let params = fields.filter(function (searchField) {
+    return searchField.field === mainQueryField;
+  }).map(function (searchField) {
+    // Remove spaces on either end of the value.
+    const trimmed = searchField.value.trim();
+    // One method of supporting search-as-you-type is to append a wildcard '*'
+    //   to match zero or more additional characters at the end of the users search term.
+    // @see: https://lucene.apache.org/solr/guide/6_6/the-standard-query-parser.html#TheStandardQueryParser-WildcardSearches
+    // @see: https://opensourceconnections.com/blog/2013/06/07/search-as-you-type-with-solr/
+    if (appendWildcard && trimmed.length > 0) {
+      // Split into word chunks.
+      const words = trimmed.split(" ");
+      // If there are multiple chunks, join them with "+", repeat the last word + append "*".
+      if (words.length > 1) {
+        return `${words.join("+")}+${words.pop()}*`;
+      }
+      // If there is only 1 word, repeat it an append "*".
+      return `${words}+${words}*`;
+    }
+    // If we are not supposed to append a wildcard, just return the value.
+    // ngram tokens/filters should be set up in solr config for
+    // the autocomplete endpoint request handler.
+    return trimmed;
+  });
+
+  if (params[0]) {
+    qs += params[0];
+  }
+
+  return qs;
+};
+
+const solrSuggestQuery = (suggestQuery, format = {wt: "json"}) => {
+  const {
+    rows,
+    searchFields,
+    filters,
+    appendWildcard,
+  } = suggestQuery;
+
+  const mainQueryField = Object.hasOwnProperty.call(suggestQuery, "mainQueryField") ? suggestQuery.mainQueryField : null;
+
+  const queryFilters = (filters || []).map((filter) => ({...filter, type: filter.type || "text"}));
+  const mainQuery = buildSuggestQuery(searchFields.concat(queryFilters), mainQueryField, appendWildcard);
+  const queryParams = buildQuery(searchFields.concat(queryFilters), mainQueryField);
+  const facetFieldParam = facetFields(searchFields);
+
+  return mainQuery +
+    `${queryParams.length > 0 ? `&${queryParams}` : ""}` +
+    `${facetFieldParam.length > 0 ? `&${facetFieldParam}` : ""}` +
+    `&rows=${rows}` +
+    `&${buildFormat(format)}`;
+};
 
 export {
   rangeFacetToQueryFilter,
@@ -194,9 +237,11 @@ export {
   fieldToQueryFilter,
   buildQuery,
   buildMainQuery,
+  buildSuggestQuery,
   buildHighlight,
   facetFields,
   facetSorts,
   buildSort,
-  solrQuery
+  solrQuery,
+  solrSuggestQuery
 };

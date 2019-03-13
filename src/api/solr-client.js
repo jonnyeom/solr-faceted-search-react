@@ -1,5 +1,7 @@
 import queryReducer from "../reducers/query";
 import resultReducer from "../reducers/results";
+import suggestionReducer from "../reducers/suggestions";
+import suggestQueryReducer from "../reducers/suggestQuery";
 // import { submitQuery, fetchCsv } from "./server";
 import server from "./server";
 
@@ -84,6 +86,39 @@ class SolrClient {
     });
   }
 
+  setSuggestQuery(query, autocomplete, value) {
+    const {searchFields} = query;
+    // Add the current text field value to the searchFields array.
+    const newFields = searchFields
+      .map((searchField) => searchField.field === query.mainQueryField ? {...searchField, value: value} : searchField);
+    const payload = {
+      type: "SET_SUGGEST_QUERY",
+      suggestQuery: {
+        searchFields: newFields,
+        sortFields: query.sortFields,
+        filters: query.filters,
+        userpass: query.userpass,
+        mainQueryField: query.mainQueryField,
+        start: 0,
+        mode: autocomplete.mode,
+        url: autocomplete.url,
+        rows: autocomplete.suggestionRows || 5,
+        appendWildcard: autocomplete.appendWildcard || false,
+        value
+      }
+    };
+    this.sendSuggestQuery(suggestQueryReducer(this.state.suggestQuery, payload));
+  }
+
+  sendSuggestQuery(suggestQuery = this.state.suggestQuery) {
+    this.state.suggestQuery = suggestQuery;
+    server.submitSuggestQuery(suggestQuery, (action) => {
+      this.state.suggestions = suggestionReducer(this.state.suggestions, action);
+      this.state.suggestQuery = suggestQueryReducer(this.state.suggestQuery, action);
+      this.onChange(this.state, this.getHandlers());
+    });
+  }
+
   sendNextCursorQuery() {
     server.submitQuery(this.state.query, (action) => {
       this.state.results = resultReducer(this.state.results, {
@@ -132,6 +167,11 @@ class SolrClient {
     const payload = {type: "SET_SEARCH_FIELDS", newFields: newFields};
 
     this.sendQuery(queryReducer(this.state.query, payload));
+    // Enable the the autosuggest input to be cleared cleared
+    // but only if autcomplete has been configured.
+    if (Object.hasOwnProperty.call(this.state, "suggestQuery")) {
+      this.state.suggestQuery = suggestQueryReducer(this.state.suggestQuery, payload);
+    }
   }
 
   setFacetSort(field, value) {
@@ -172,6 +212,7 @@ class SolrClient {
 
   getHandlers() {
     return {
+      onTextInputChange: this.setSuggestQuery.bind(this),
       onSortFieldChange: this.setSortFieldValue.bind(this),
       onSearchFieldChange: this.setSearchFieldValue.bind(this),
       onFacetSortChange: this.setFacetSort.bind(this),

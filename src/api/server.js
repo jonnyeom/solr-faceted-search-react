@@ -1,5 +1,5 @@
 import xhr from "xhr";
-import solrQuery from "./solr-query";
+import solrQuery, { solrSuggestQuery } from "./solr-query";
 
 const MAX_INT = 2147483647;
 
@@ -27,6 +27,26 @@ server.submitQuery = (query, callback) => {
   }, (err, resp) => {
     if (resp.statusCode >= 200 && resp.statusCode < 300) {
       callback({type: "SET_RESULTS", data: JSON.parse(resp.body)});
+    } else {
+      console.log("Server error: ", resp.statusCode);
+    }
+  });
+};
+
+server.submitSuggestQuery = (suggestQuery, callback) => {
+  callback({type: "SET_SUGGESTIONS_PENDING"});
+
+  server.performXhr({
+    url: suggestQuery.url,
+    data: solrSuggestQuery(suggestQuery),
+    method: "POST",
+    headers: {
+      "Content-type": "application/x-www-form-urlencoded",
+      ...(suggestQuery.userpass ? {"Authorization": "Basic " + suggestQuery.userpass} : {}),
+    }
+  }, (err, resp) => {
+    if (resp.statusCode >= 200 && resp.statusCode < 300) {
+      callback({type: "SET_SUGGESTIONS", data: JSON.parse(resp.body)});
     } else {
       console.log("Server error: ", resp.statusCode);
     }
