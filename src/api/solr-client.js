@@ -97,11 +97,12 @@ class SolrClient {
         searchFields: newFields,
         sortFields: query.sortFields,
         filters: query.filters,
-        userpass: query.userpass,
+        userpass: autocomplete.userpass || "",
         mainQueryField: query.mainQueryField,
         start: 0,
-        mode: autocomplete.mode,
+        proxyIsDisabled: autocomplete.proxyIsDisabled,
         url: autocomplete.url,
+        mode: autocomplete.mode,
         rows: autocomplete.suggestionRows || 5,
         appendWildcard: autocomplete.appendWildcard || false,
         value
@@ -168,7 +169,7 @@ class SolrClient {
 
     this.sendQuery(queryReducer(this.state.query, payload));
     // Enable the the autosuggest input to be cleared cleared
-    // but only if autcomplete has been configured.
+    // but only if autocomplete has been configured.
     if (Object.hasOwnProperty.call(this.state, "suggestQuery")) {
       this.state.suggestQuery = suggestQueryReducer(this.state.suggestQuery, payload);
     }
