@@ -173,7 +173,7 @@ const solrQuery = (query, format = {wt: "json"}) => {
 
 export default solrQuery;
 
-const buildSuggestQuery = (fields, mainQueryField, appendWildcard) => {
+const buildSuggestQuery = (fields, mainQueryField, appendWildcard, isProxyDisabled) => {
   let qs = "q=";
   let params = fields.filter(function (searchField) {
     return searchField.field === mainQueryField;
@@ -185,14 +185,19 @@ const buildSuggestQuery = (fields, mainQueryField, appendWildcard) => {
     // @see: https://lucene.apache.org/solr/guide/6_6/the-standard-query-parser.html#TheStandardQueryParser-WildcardSearches
     // @see: https://opensourceconnections.com/blog/2013/06/07/search-as-you-type-with-solr/
     if (appendWildcard && trimmed.length > 0) {
-      // Split into word chunks.
-      const words = trimmed.split(" ");
-      // If there are multiple chunks, join them with "+", repeat the last word + append "*".
-      if (words.length > 1) {
-        return `${words.join("+")}+${words.pop()}*`;
+      if (isProxyDisabled) {
+        // Split into word chunks.
+        const words = trimmed.split(" ");
+        // If there are multiple chunks, join them with "+", repeat the last word + append "*".
+        if (words.length > 1) {
+          return `${words.join("+")}+${words.pop()}*`;
+        }
+        // If there is only 1 word, repeat it an append "*".
+        return `${words}+${words}*`;
       }
-      // If there is only 1 word, repeat it an append "*".
-      return `${words}+${words}*`;
+      else {
+        return `${trimmed}*`;
+      }
     }
     // If we are not supposed to append a wildcard, just return the value.
     // ngram tokens/filters should be set up in solr config for
@@ -213,12 +218,13 @@ const solrSuggestQuery = (suggestQuery, format = {wt: "json"}) => {
     searchFields,
     filters,
     appendWildcard,
+    proxyIsDisabled
   } = suggestQuery;
 
   const mainQueryField = Object.hasOwnProperty.call(suggestQuery, "mainQueryField") ? suggestQuery.mainQueryField : null;
 
   const queryFilters = (filters || []).map((filter) => ({...filter, type: filter.type || "text"}));
-  const mainQuery = buildSuggestQuery(searchFields.concat(queryFilters), mainQueryField, appendWildcard);
+  const mainQuery = buildSuggestQuery(searchFields.concat(queryFilters), mainQueryField, appendWildcard, proxyIsDisabled);
   const queryParams = buildQuery(searchFields.concat(queryFilters), mainQueryField);
   const facetFieldParam = facetFields(searchFields);
 
