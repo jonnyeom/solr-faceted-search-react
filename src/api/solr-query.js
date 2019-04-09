@@ -83,7 +83,10 @@ const buildFormat = (format) => Object.keys(format)
   .map((key) => `${key}=${encodeURIComponent(format[key])}`)
   .join("&");
 
-const buildMainQuery = (fields, mainQueryField) => {
+const buildMainQuery = (fields, mainQueryField, isD7, proxyIsDisabled) => {
+  // Use "search" as the main param for D7 proxy implementations.
+  const mainParam = isD7 && !proxyIsDisabled ? "search" : "q";
+
   let params = fields.filter(function (searchField) {
     return searchField.field === mainQueryField;
   }).map(function (searchField) {
@@ -91,11 +94,11 @@ const buildMainQuery = (fields, mainQueryField) => {
   });
   // Add value of the mainQueryField to the q param, if there is one.
   if (params[0]) {
-    return `q=${params[0]}`;
+    return `${mainParam}=${params[0]}`;
   }
 
   // If query field exists but is null/empty/undefined send the wildcard query.
-  return "q=*:*";
+  return `${mainParam}=*:*`;
 };
 
 const buildHighlight = (highlight) => {
@@ -134,13 +137,15 @@ const solrQuery = (query, format = {wt: "json"}) => {
     cursorMark,
     idField,
     group,
-    hl
+    hl,
+    isD7,
+    proxyIsDisabled
   } = query;
 
   const mainQueryField = Object.hasOwnProperty.call(query, "mainQueryField") ? query.mainQueryField : null;
 
   const filters = (query.filters || []).map((filter) => ({...filter, type: filter.type || "text"}));
-  const mainQuery = buildMainQuery(searchFields.concat(filters), mainQueryField);
+  const mainQuery = buildMainQuery(searchFields.concat(filters), mainQueryField, isD7, proxyIsDisabled);
   const queryParams = buildQuery(searchFields.concat(filters), mainQueryField);
 
   const facetFieldParam = facetFields(searchFields);
@@ -173,8 +178,9 @@ const solrQuery = (query, format = {wt: "json"}) => {
 
 export default solrQuery;
 
-const buildSuggestQuery = (fields, mainQueryField, appendWildcard, isProxyDisabled) => {
-  let qs = "q=";
+const buildSuggestQuery = (fields, mainQueryField, appendWildcard, isProxyDisabled, isD7) => {
+  // Use "search" as the main param for D7 proxy implementations.
+  let qs = isD7 && !isProxyDisabled ? "search=" : "q=";
   let params = fields.filter(function (searchField) {
     return searchField.field === mainQueryField;
   }).map(function (searchField) {
@@ -218,13 +224,14 @@ const solrSuggestQuery = (suggestQuery, format = {wt: "json"}) => {
     searchFields,
     filters,
     appendWildcard,
-    proxyIsDisabled
+    proxyIsDisabled,
+    isD7
   } = suggestQuery;
 
   const mainQueryField = Object.hasOwnProperty.call(suggestQuery, "mainQueryField") ? suggestQuery.mainQueryField : null;
 
   const queryFilters = (filters || []).map((filter) => ({...filter, type: filter.type || "text"}));
-  const mainQuery = buildSuggestQuery(searchFields.concat(queryFilters), mainQueryField, appendWildcard, proxyIsDisabled);
+  const mainQuery = buildSuggestQuery(searchFields.concat(queryFilters), mainQueryField, appendWildcard, proxyIsDisabled, isD7);
   const queryParams = buildQuery(searchFields.concat(queryFilters), mainQueryField);
   const facetFieldParam = facetFields(searchFields);
 
