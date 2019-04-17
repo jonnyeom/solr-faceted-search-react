@@ -94,6 +94,7 @@ class SolrClient {
     const payload = {
       type: "SET_SUGGEST_QUERY",
       suggestQuery: {
+        isD7: query.isD7,
         searchFields: newFields,
         sortFields: query.sortFields,
         filters: query.filters,
