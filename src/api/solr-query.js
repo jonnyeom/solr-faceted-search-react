@@ -52,7 +52,7 @@ const fieldToQueryFilter = (field) => {
 };
 
 const buildQuery = (fields, mainQueryField) => fields
-// Do not include main query field in filter field query param.
+  // Do not include main query field in filter field query param.
   .filter((searchField) => (!Object.hasOwnProperty.call(searchField, "field") || (Object.hasOwnProperty.call(searchField, "field") && searchField.field !== mainQueryField)))
   .map(fieldToQueryFilter)
   .filter((queryFilter) => queryFilter !== null)
@@ -61,11 +61,11 @@ const buildQuery = (fields, mainQueryField) => fields
 
 const facetFields = (fields) => fields
   .filter((field) => field.type === "list-facet" || field.type === "range-facet")
-  .map((field) => `facet.field=${encodeURIComponent(field.field)}`)
+  .map((field) => `facet.field[]=${encodeURIComponent(field.field)}`)
   .concat(
     fields
       .filter((field) => field.type === "period-range-facet")
-      .map((field) => `facet.field=${encodeURIComponent(field.lowerBound)}&facet.field=${encodeURIComponent(field.upperBound)}`)
+      .map((field) => `facet.field[]${encodeURIComponent(field.lowerBound)}&facet.field[]=${encodeURIComponent(field.upperBound)}`)
   )
   .join("&");
 
